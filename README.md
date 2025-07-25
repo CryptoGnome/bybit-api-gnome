@@ -1,4 +1,4 @@
-# Node.js & Typescript Bybit API SDK
+# Node.js & Typescript Bybit API SDK (with V5 Support)
 [![Tests](https://circleci.com/gh/tiagosiebler/bybit-api.svg?style=shield)](https://circleci.com/gh/tiagosiebler/bybit-api)
 [![npm version](https://img.shields.io/npm/v/bybit-api)][1] [![npm size](https://img.shields.io/bundlephobia/min/bybit-api/latest)][1] [![npm downloads](https://img.shields.io/npm/dt/bybit-api)][1]
 [![last commit](https://img.shields.io/github/last-commit/tiagosiebler/bybit-api)][1]
@@ -8,7 +8,7 @@
 
 [1]: https://www.npmjs.com/package/bybit-api
 
-Node.js connector for the Bybit APIs and WebSockets:
+Node.js connector for the Bybit APIs and WebSockets with full V5 API support:
 - Complete integration with all bybit APIs.
 - TypeScript support (with type declarations for most API requests & responses).
 - Over 300 end-to-end tests making real API calls & WebSocket connections, validating any changes before they reach npm.
@@ -70,6 +70,9 @@ Each REST API group has a dedicated REST client. To avoid confusion, here are th
 | [AccountAssetClient](src/account-asset-client.ts)                     | [Account Asset APIs](https://bybit-exchange.github.io/docs/account_asset/#t-introduction)                                     |
 | [CopyTradingClient](src/copy-trading-client.ts)                       | [Copy Trading APIs](https://bybit-exchange.github.io/docs/copy_trading/#t-introduction)           	                          |
 | [WebsocketClient](src/websocket-client.ts)                            | All WebSocket Events (Public & Private for all API categories)                                                                |
+| [ **V5 API (Latest)** ]              	                              | The latest V5 APIs - unified interface for all trading categories                                                              |
+| [RestClientV5](src/rest-client-v5.ts)                                 | [V5 REST APIs](https://bybit-exchange.github.io/docs/v5/intro) - Unified REST client for all V5 endpoints                    |
+| [WebSocketClientV5](src/websocket-client-v5.ts)                       | [V5 WebSocket APIs](https://bybit-exchange.github.io/docs/v5/ws/connect) - Unified WebSocket client for V5 real-time data    |
 
 Examples for using each client can be found in:
 - the [examples](./examples) folder.
@@ -162,6 +165,117 @@ client.getOrderBook({ symbol: 'BTCUSD' })
   .catch(err => {
     console.error("getOrderBook error: ", err);
   });
+```
+
+### V5 API Usage (Recommended)
+
+The V5 API provides a unified interface for all trading categories. It's the latest and most feature-complete API from Bybit.
+
+```typescript
+const { RestClientV5, WebSocketClientV5 } = require('bybit-api');
+
+// Initialize V5 REST client
+const client = new RestClientV5({
+  key: 'your_api_key',
+  secret: 'your_api_secret',
+  testnet: true, // Set to false for mainnet
+  enable_time_sync: true,
+});
+
+// Public API examples
+async function v5Examples() {
+  // Get server time
+  const serverTime = await client.getServerTime();
+  console.log('Server time:', serverTime);
+
+  // Get instruments info for spot trading
+  const instruments = await client.getInstrumentsInfo({
+    category: 'spot',
+    limit: 10,
+  });
+  console.log('Spot instruments:', instruments);
+
+  // Get orderbook
+  const orderbook = await client.getOrderbook({
+    category: 'spot',
+    symbol: 'BTCUSDT',
+    limit: 25,
+  });
+  console.log('BTCUSDT orderbook:', orderbook);
+
+  // Get kline data
+  const klines = await client.getKline({
+    category: 'linear',
+    symbol: 'BTCUSDT',
+    interval: '1h',
+    limit: 50,
+  });
+  console.log('Klines:', klines);
+
+  // Private API examples (requires API credentials)
+  
+  // Get wallet balance
+  const balance = await client.getWalletBalance({
+    accountType: 'UNIFIED',
+  });
+  console.log('Wallet balance:', balance);
+
+  // Place an order
+  const order = await client.placeOrder({
+    category: 'spot',
+    symbol: 'BTCUSDT',
+    side: 'Buy',
+    orderType: 'Limit',
+    qty: '0.001',
+    price: '30000',
+    timeInForce: 'GTC',
+  });
+  console.log('Order placed:', order);
+
+  // Get positions (for derivatives)
+  const positions = await client.getPositionInfo({
+    category: 'linear',
+    symbol: 'BTCUSDT',
+  });
+  console.log('Positions:', positions);
+}
+
+// V5 WebSocket usage
+const wsClient = new WebSocketClientV5({
+  key: 'your_api_key',
+  secret: 'your_api_secret',
+  testnet: true,
+});
+
+// Set up event listeners
+wsClient.on('update', (data) => {
+  console.log('Market data update:', data);
+});
+
+wsClient.on('open', (data) => {
+  console.log(`Connected to ${data.category} WebSocket`);
+});
+
+async function v5WebSocketExamples() {
+  // Connect to different categories
+  await wsClient.connect('spot');
+  await wsClient.connect('linear');
+  
+  // Subscribe to market data
+  wsClient.subscribeOrderbook('spot', 'BTCUSDT', 1);
+  wsClient.subscribeTrades('spot', 'BTCUSDT');
+  wsClient.subscribeTicker('linear', 'BTCUSDT');
+  wsClient.subscribeKline('linear', 'BTCUSDT', '1m');
+
+  // Subscribe to private data (requires authentication)
+  if (wsClient['options'].key && wsClient['options'].secret) {
+    await wsClient.connect('private');
+    wsClient.subscribeOrders();
+    wsClient.subscribePositions();
+    wsClient.subscribeExecutions();
+    wsClient.subscribeWallet();
+  }
+}
 ```
 
 ## WebSockets

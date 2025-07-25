@@ -167,7 +167,7 @@ export default abstract class BaseRestClient {
       await this.syncTime();
     }
 
-    return this.signRequest(params, method, signMethod);
+    return this.signRequest((params || {}) as TParams & SignedRequestContext, method, signMethod);
   }
 
   /** Returns an axios request object. Handles signing process automatically if this is a private API call */
@@ -317,7 +317,7 @@ export default abstract class BaseRestClient {
   /**
    * @private sign request and set recv window
    */
-  private async signRequest<T = {}>(
+  private async signRequest<T extends SignedRequestContext = SignedRequestContext>(
     data: T,
     method: Method,
     signMethod: SignMethod

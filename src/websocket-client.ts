@@ -943,12 +943,20 @@ export class WebsocketClient extends EventEmitter {
       case WS_KEY_MAP.contractUSDTPublic: {
         return WS_BASE_URL_MAP.contractUSDT.public[networkKey];
       }
+      // V5 WebSocket keys - these should be handled by WebSocketClientV5
+      case WS_KEY_MAP.v5Spot:
+      case WS_KEY_MAP.v5Linear:
+      case WS_KEY_MAP.v5Inverse:
+      case WS_KEY_MAP.v5Option:
+      case WS_KEY_MAP.v5Private: {
+        throw new Error(`V5 WebSocket keys should be handled by WebSocketClientV5, not WebsocketClient. Use WebSocketClientV5 for V5 API connections.`);
+      }
       default: {
         this.logger.error('getWsUrl(): Unhandled wsKey: ', {
           ...loggerCategory,
           wsKey,
         });
-        throw neverGuard(wsKey, `getWsUrl(): Unhandled wsKey`);
+        throw neverGuard(wsKey as never, `getWsUrl(): Unhandled wsKey`);
       }
     }
   }

@@ -163,6 +163,12 @@ export const WS_KEY_MAP = {
   contractUSDTPrivate: 'contractUSDTPrivate',
   contractInversePublic: 'contractInversePublic',
   contractInversePrivate: 'contractInversePrivate',
+  // V5 WebSocket keys
+  v5Spot: 'v5Spot',
+  v5Linear: 'v5Linear',
+  v5Inverse: 'v5Inverse',
+  v5Option: 'v5Option',
+  v5Private: 'v5Private',
 } as const;
 
 export const WS_AUTH_ON_CONNECT_KEYS: WsKey[] = [
